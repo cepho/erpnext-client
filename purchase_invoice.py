@@ -670,6 +670,15 @@ class PurchaseInvoice(Invoice):
 #        if not self.update_stock and self.vat_rates:
 #            self.e_items[0]['expense_account'] = accounts[self.vat_rates[0]]
 
+    def assign_aggregate_e_item(self):
+        net = sum(self.totals.values())
+        self.e_items = [{
+            'item_code': self.aggregate_item_code,
+            'qty': net / settings.AGGREGATE_ITEM_VALUE,
+            'rate': settings.AGGREGATE_ITEM_VALUE,
+            'cost_center': self.company.cost_center,
+        }]
+
     def create_taxes(self):
         self.taxes = []
         for vat, account in self.company.taxes.items():
@@ -762,10 +771,11 @@ class PurchaseInvoice(Invoice):
             return True
         return False
 
-    def __init__(self, update_stock=False):
+    def __init__(self, update_stock=False, aggregate_item_code=None):
         # do not call super().__init__ here,
         # because there is no doc in ERPNext yet
         self.update_stock = update_stock
+        self.aggregate_item_code = aggregate_item_code
         self.order_id = None
         self.date = None
         self.company_name = sg.UserSettings()['-company-']
@@ -803,8 +813,8 @@ class PurchaseInvoice(Invoice):
 
     @classmethod
     def read_and_transfer(cls, invoice_json, infile, update_stock, account_abbrv=None, paid_by_submitter=False, project=None,
-                          supplier=None, check_dup=True, cli_overrides=None):
-        pinv_obj = PurchaseInvoice(update_stock)
+                          supplier=None, check_dup=True, cli_overrides=None, aggregate_item_code=None):
+        pinv_obj = PurchaseInvoice(update_stock, aggregate_item_code=aggregate_item_code)
         pinv_obj.cli_overrides = cli_overrides
         inv = pinv_obj.read_pdf(
                 invoice_json, infile, account_abbrv, paid_by_submitter, supplier, check_dup=check_dup)
@@ -824,7 +834,9 @@ class PurchaseInvoice(Invoice):
         print("Prüfe auf doppelte Rechung")
         if self.check_if_present(check_dup):
             return self
-        if self.extract_items:
+        if self.aggregate_item_code:
+            self.assign_aggregate_e_item()
+        elif self.extract_items:
             Api.load_item_data()
             print("Hole Lagerdaten")
             yesterd = utils.yesterday(self.date)

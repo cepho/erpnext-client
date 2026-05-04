@@ -261,9 +261,9 @@ def read_and_transfer(inv, check_dup=True, cli_overrides=None):
                    inv.get('buchungskonto') in settings.STOCK_PRE_ACCOUNTS
     aggregate_item_code = None
     if update_stock:
-        if inv.get('nurUK'):
+        if inv.get('nur_uk'):
             aggregate_item_code = settings.AGGREGATE_ITEMS['default']
-        elif inv.get('nurElektromaterial'):
+        elif inv.get('nur_elektromaterial'):
             aggregate_item_code = settings.AGGREGATE_ITEMS['Elektro-Komponenten']
     pinv = purchase_invoice.PurchaseInvoice.read_and_transfer(
         json_object, f, update_stock,

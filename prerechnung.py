@@ -259,18 +259,12 @@ def read_and_transfer(inv, check_dup=True, cli_overrides=None):
     update_stock = 'chance' in inv and inv['chance'] and \
                    project.project_type(inv['chance']) in settings.STOCK_PROJECT_TYPES and \
                    inv.get('buchungskonto') in settings.STOCK_PRE_ACCOUNTS
-    aggregate_item_code = None
-    if update_stock:
-        if inv.get('nur_uk'):
-            aggregate_item_code = settings.AGGREGATE_ITEMS['default']
-        elif inv.get('nur_elektromaterial'):
-            aggregate_item_code = settings.AGGREGATE_ITEMS['Elektro-Komponenten']
     pinv = purchase_invoice.PurchaseInvoice.read_and_transfer(
         json_object, f, update_stock,
         account_abbrv=inv.get('buchungskonto'), paid_by_submitter=inv.get('selbst_bezahlt', False),
         project=inv.get('chance'), supplier=inv.get('lieferant'), check_dup=check_dup,
         cli_overrides=cli_overrides,
-        aggregate_item_code=aggregate_item_code
+        pre_invoice=inv
     )
     if pinv and not inv.get('purchase_invoice'):
         inv['eingepflegt'] = True
@@ -306,7 +300,8 @@ def cli_read_and_transfer(name=None, advance=False, overrides=None):
             filters={'name': name},
             fields=['datum', 'name', 'chance', 'lieferant', 'pdf', 'json',
                     'lager', 'selbst_bezahlt', 'vom_konto_überwiesen', 'typ',
-                    'processed', 'balkonmodule', 'buchungskonto'],
+                    'processed', 'balkonmodule', 'buchungskonto',
+                    'nuruk', 'nurelektromaterial'],
             limit_page_length=1
         )
         if not invs:

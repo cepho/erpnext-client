@@ -813,7 +813,13 @@ class PurchaseInvoice(Invoice):
 
     @classmethod
     def read_and_transfer(cls, invoice_json, infile, update_stock, account_abbrv=None, paid_by_submitter=False, project=None,
-                          supplier=None, check_dup=True, cli_overrides=None, aggregate_item_code=None):
+                          supplier=None, check_dup=True, cli_overrides=None, pre_invoice=None):
+        aggregate_item_code = None
+        if update_stock and pre_invoice:
+            if pre_invoice.get('nuruk'):
+                aggregate_item_code = AGGREGATE_ITEMS['default']
+            elif pre_invoice.get('nurelektromaterial'):
+                aggregate_item_code = AGGREGATE_ITEMS['Elektro-Komponenten']
         pinv_obj = PurchaseInvoice(update_stock, aggregate_item_code=aggregate_item_code)
         pinv_obj.cli_overrides = cli_overrides
         inv = pinv_obj.read_pdf(

@@ -160,7 +160,8 @@ class Company(Doc):
                          'company':self.name},
                 fields= ['datum','name','chance','lieferant','pdf','json',
                          'lager','selbst_bezahlt','vom_konto_überwiesen','typ',
-                         'processed', 'balkonmodule', 'buchungskonto'],
+                         'processed', 'balkonmodule', 'buchungskonto',
+                         'nuruk', 'nurelektromaterial'],
                 limit_page_length=LIMIT)
 
     def reconcile(self,bt):
